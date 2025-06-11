@@ -7,12 +7,20 @@ public class SnakeController : MonoBehaviour
     public float moveTime = 0.1f;
     public Transform snakeTail;
 
-    public Tilemap wallTilemap;   // Gán trong Inspector
-    public Tilemap floorTilemap;  // Gán trong Inspector
+    public Tilemap wallTilemap;
+    public Tilemap floorTilemap;
 
     private Vector2Int direction = Vector2Int.right;
     private bool isMoving = false;
     private Vector3 previousHeadPosition;
+
+    private int medicineCount;
+
+    void Start()
+    {
+        // Đếm tổng số medicine khi bắt đầu
+        medicineCount = GameObject.FindGameObjectsWithTag("Medicine").Length;
+    }
 
     void Update()
     {
@@ -31,7 +39,6 @@ public class SnakeController : MonoBehaviour
         else
             return;
 
-        // Không cho quay đầu ngược
         if (newDirection + direction == Vector2Int.zero)
             return;
 
@@ -47,14 +54,12 @@ public class SnakeController : MonoBehaviour
         Vector3 endPos = startPos + new Vector3(direction.x, direction.y, 0);
         Vector3Int cellPos = floorTilemap.WorldToCell(endPos);
 
-        // Không có nền ở ô trước mặt → không đi
         if (!floorTilemap.HasTile(cellPos))
         {
             isMoving = false;
             yield break;
         }
 
-        // Kiểm tra có medicine ở ô trước mặt không
         Collider2D medicine = Physics2D.OverlapBox(endPos, Vector2.one * 0.8f, 0);
         if (medicine != null && medicine.CompareTag("Medicine"))
         {
@@ -66,18 +71,23 @@ public class SnakeController : MonoBehaviour
 
             if (hasWall || !hasFloor)
             {
-                // Nếu phía sau medicine là tường hoặc mép map → ăn
                 Destroy(medicine.gameObject);
+                medicineCount--;
+
+                if (medicineCount <= 0)
+                {
+                    ExitHole exit = Object.FindFirstObjectByType<ExitHole>();
+                    if (exit != null)
+                        exit.Open();
+                }
             }
             else
             {
-                // Nếu có nền và không có tường → đẩy medicine
                 medicine.transform.position = medicineTarget;
             }
         }
         else
         {
-            // Nếu không phải medicine mà có tường → không đi
             if (wallTilemap.HasTile(cellPos))
             {
                 isMoving = false;
@@ -85,7 +95,6 @@ public class SnakeController : MonoBehaviour
             }
         }
 
-        // Di chuyển đầu rắn
         previousHeadPosition = startPos;
 
         float elapsed = 0;
@@ -98,11 +107,22 @@ public class SnakeController : MonoBehaviour
 
         transform.position = endPos;
 
-        // Di chuyển đuôi theo
         if (snakeTail != null)
             snakeTail.position = previousHeadPosition;
 
         isMoving = false;
     }
 
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Exit"))
+        {
+            ExitHole exit = collision.GetComponent<ExitHole>();
+            if (exit != null && exit.isOpen)
+            {
+                Debug.Log("🏆 WIN! Rắn đã thoát!");
+                // TODO: chuyển màn hoặc hiện giao diện thắng
+            }
+        }
+    }
 }
