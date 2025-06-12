@@ -8,9 +8,7 @@ public class SnakeState
     public SnakeState(List<Transform> segments)
     {
         segmentPositions = new List<Vector3>();
-        foreach (Transform t in segments)
-        {
-            segmentPositions.Add(t.position);
-        }
+        foreach (Transform seg in segments)
+            segmentPositions.Add(seg.position);
     }
 }

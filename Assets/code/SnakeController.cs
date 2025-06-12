@@ -6,13 +6,14 @@ using System.Collections.Generic;
 public class SnakeController : MonoBehaviour
 {
     public float moveTime = 0.1f;
-    public Tilemap wallTilemap;
+    //public Tilemap wallTilemap;
     public Tilemap floorTilemap;
+    public List<Transform> snakeSegments = new List<Transform>();
+    public SnakeFaceController faceController;
 
-    public List<Transform> snakeSegments = new List<Transform>(); // đầu, thân, đuôi
     private Vector2Int direction = Vector2Int.right;
     private bool isMoving = false;
-
+    private bool isPushedBack = false;
     private Stack<SnakeState> undoStack = new Stack<SnakeState>();
     private int medicineCount;
 
@@ -21,12 +22,12 @@ public class SnakeController : MonoBehaviour
         medicineCount = GameObject.FindGameObjectsWithTag("Medicine").Length;
 
         if (snakeSegments.Count == 0)
-            snakeSegments.Add(transform); // Đầu rắn là chính GameObject này
+            snakeSegments.Add(transform);
     }
 
     void Update()
     {
-        if (isMoving) return;
+        if (isMoving || isPushedBack) return;
 
         if (Input.GetKeyDown(KeyCode.Z))
         {
@@ -51,6 +52,9 @@ public class SnakeController : MonoBehaviour
             return;
 
         direction = newDirection;
+        if (faceController != null)
+            faceController.SetDirection(direction);
+
         StartCoroutine(MoveOneStep());
     }
 
@@ -59,14 +63,31 @@ public class SnakeController : MonoBehaviour
         isMoving = true;
         SaveState();
 
-        Vector3 startPos = snakeSegments[0].position;
-        Vector3 endPos = startPos + new Vector3(direction.x, direction.y, 0);
+        List<Vector3> oldPositions = new List<Vector3>();
+        foreach (Transform segment in snakeSegments)
+            oldPositions.Add(segment.position);
+
+        Vector3 endPos = snakeSegments[0].position + new Vector3(direction.x, direction.y, 0);
         Vector3Int cellPos = floorTilemap.WorldToCell(endPos);
 
-        if (!floorTilemap.HasTile(cellPos))
+        bool allowMove = !floorTilemap.HasTile(cellPos);
+        if (allowMove)
         {
-            isMoving = false;
-            yield break;
+            bool anySegmentOnFloor = false;
+            foreach (Transform segment in snakeSegments)
+            {
+                Vector3Int segmentCell = floorTilemap.WorldToCell(segment.position);
+                if (floorTilemap.HasTile(segmentCell))
+                {
+                    anySegmentOnFloor = true;
+                    break;
+                }
+            }
+            if (!anySegmentOnFloor)
+            {
+                isMoving = false;
+                yield break;
+            }
         }
 
         Collider2D hit = Physics2D.OverlapBox(endPos, Vector2.one * 0.8f, 0);
@@ -76,16 +97,25 @@ public class SnakeController : MonoBehaviour
             yield break;
         }
 
+        for (int i = 1; i < snakeSegments.Count; i++)
+        {
+            if (Vector3.Distance(endPos, snakeSegments[i].position) < 0.1f)
+            {
+                isMoving = false;
+                yield break;
+            }
+        }
+
         if (hit != null && hit.CompareTag("Medicine"))
         {
             Vector3 medicineTarget = endPos + new Vector3(direction.x, direction.y, 0);
             Vector3Int targetCell = floorTilemap.WorldToCell(medicineTarget);
 
             bool hasFloor = floorTilemap.HasTile(targetCell);
-            bool hasWall = wallTilemap.HasTile(targetCell);
+            //bool hasWall = wallTilemap.HasTile(targetCell);
             bool hasWallObj = Physics2D.OverlapBox(medicineTarget, Vector2.one * 0.8f, 0)?.CompareTag("Wall") ?? false;
 
-            if (hasWall || hasWallObj || !hasFloor)
+            if ( hasWallObj || !hasFloor)
             {
                 Destroy(hit.gameObject);
                 medicineCount--;
@@ -96,6 +126,8 @@ public class SnakeController : MonoBehaviour
                     if (exit != null)
                         exit.Open();
                 }
+
+                StartCoroutine(PushBackRoutine());
             }
             else
             {
@@ -103,25 +135,65 @@ public class SnakeController : MonoBehaviour
             }
         }
 
-        // Move body (tạm thời chỉ có đầu + đuôi)
-        Vector3 prevPos = snakeSegments[0].position;
+        List<Vector3> targets = new List<Vector3>();
+        targets.Add(endPos);
+        for (int i = 1; i < snakeSegments.Count; i++)
+            targets.Add(oldPositions[i - 1]);
+
         float elapsed = 0;
         while (elapsed < moveTime)
         {
-            snakeSegments[0].position = Vector3.Lerp(prevPos, endPos, elapsed / moveTime);
+            for (int i = 0; i < snakeSegments.Count; i++)
+            {
+                Vector3 start = oldPositions[i];
+                Vector3 target = targets[i];
+                snakeSegments[i].position = Vector3.Lerp(start, target, elapsed / moveTime);
+            }
+
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        snakeSegments[0].position = endPos;
-
-        // Di chuyển đuôi nếu có
-        if (snakeSegments.Count > 1)
-        {
-            snakeSegments[1].position = prevPos;
-        }
+        for (int i = 0; i < snakeSegments.Count; i++)
+            snakeSegments[i].position = targets[i];
 
         isMoving = false;
+    }
+
+    IEnumerator PushBackRoutine()
+    {
+        isPushedBack = true;
+        Vector2Int backward = -direction;
+
+        while (true)
+        {
+            bool collisionDetected = false;
+
+            foreach (Transform segment in snakeSegments)
+            {
+                Vector3 nextPos = segment.position + new Vector3(backward.x, backward.y, 0);
+                Collider2D hit = Physics2D.OverlapBox(nextPos, Vector2.one * 0.8f, 0);
+
+                if (hit != null && hit.CompareTag("Wall"))
+                {
+                    collisionDetected = true;
+                    break;
+                }
+            }
+
+            if (collisionDetected)
+            {
+                isPushedBack = false;
+                yield break;
+            }
+
+            for (int i = 0; i < snakeSegments.Count; i++)
+            {
+                snakeSegments[i].position += new Vector3(backward.x, backward.y, 0);
+            }
+
+            yield return new WaitForSeconds(moveTime);
+        }
     }
 
     void SaveState()
@@ -137,6 +209,18 @@ public class SnakeController : MonoBehaviour
             for (int i = 0; i < snakeSegments.Count; i++)
             {
                 snakeSegments[i].position = state.segmentPositions[i];
+            }
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Exit"))
+        {
+            ExitHole exit = collision.GetComponent<ExitHole>();
+            if (exit != null && exit.isOpen)
+            {
+                Debug.Log("🏆 WIN! Rắn đã thoát!");
             }
         }
     }
