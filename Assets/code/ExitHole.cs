@@ -2,8 +2,8 @@
 
 public class ExitHole : MonoBehaviour
 {
-    public Sprite closedSprite;  // Hình ảnh khi cửa đóng
-    public Sprite openSprite;    // Hình ảnh khi cửa mở
+    public Sprite closedSprite;
+    public Sprite openSprite;
     private SpriteRenderer spriteRenderer;
     public bool isOpen = false;
 
@@ -16,6 +16,20 @@ public class ExitHole : MonoBehaviour
     public void Open()
     {
         isOpen = true;
-        spriteRenderer.sprite = openSprite;
+        if (spriteRenderer != null && openSprite != null)
+        {
+            spriteRenderer.sprite = openSprite;
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (!isOpen) return;
+
+        if (collision.CompareTag("Player") )
+        {
+            Debug.Log("🏆 WIN! Rắn đã chạm vào hố mở!");
+            
+        }
     }
 }
