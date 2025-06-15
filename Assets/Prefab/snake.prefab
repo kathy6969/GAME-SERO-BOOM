@@ -76,16 +76,16 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 3
-  m_Sprite: {fileID: 0}
+  m_SortingOrder: 10
+  m_Sprite: {fileID: 21300000, guid: 0f83a117530121349856626056e1ec91, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 0.8933333, y: 0.6333333}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
+  m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!114 &4663360408795893591
@@ -100,11 +100,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1c2bdd05f302c1418f28499a77a8bd8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  faceRenderer: {fileID: 4853611583476303736}
-  faceUp: {fileID: 21300000, guid: a76cad3461e0e094faaf27641e63a369, type: 3}
-  faceDown: {fileID: 21300000, guid: 0f83a117530121349856626056e1ec91, type: 3}
-  faceLeft: {fileID: 21300000, guid: eae9cb3736c592743a6efc8e48a1d2b4, type: 3}
-  faceRight: {fileID: 21300000, guid: 79ed3101452f6d94c85b48b0c642c8d3, type: 3}
+  faceSprite: {fileID: 6224546463059567238}
 --- !u!1 &5520199878675824412
 GameObject:
   m_ObjectHideFlags: 0
@@ -120,7 +116,7 @@ GameObject:
   - component: {fileID: 4731490548388328159}
   m_Layer: 0
   m_Name: snake
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -184,7 +180,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 2
+  m_SortingOrder: 9
   m_Sprite: {fileID: 6943535168657398750, guid: 4d806552ff5ac8a45aa12570005886af, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -209,12 +205,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveTime: 0.1
-  wallTilemap: {fileID: 0}
   floorTilemap: {fileID: 0}
   snakeSegments:
   - {fileID: 2032135014055586858}
   - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   faceController: {fileID: 4663360408795893591}
+  rainbowFlashPrefab: {fileID: 5290623880932429078, guid: 6267f4af3cc217a4b96df8cc4887225a, type: 3}
+  rainbowEffectPrefab: {fileID: 145036693988642912, guid: 00744b6e4d1a1084e8619f80b83475f1, type: 3}
+  bananaPrefab: {fileID: 2548531125292353805, guid: abde1649ce7254b4ca9973908d34424a, type: 3}
+  medicinePrefab: {fileID: 9067503285613131372, guid: cd0469b02cb3e6d43b49d086d187fecc, type: 3}
+  tailPrefab: {fileID: 342364550046801301, guid: b682f83889c05d941a15d0f6f7572fe7, type: 3}
 --- !u!50 &6601534102468061851
 Rigidbody2D:
   serializedVersion: 5
@@ -276,7 +278,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0, y: -0.106372476}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.6}
@@ -286,5 +288,5 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.91, y: 0.85}
+  m_Size: {x: 0.91, y: 0.8813884}
   m_EdgeRadius: 0

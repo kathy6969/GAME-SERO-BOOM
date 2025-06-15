@@ -1,35 +1,21 @@
-﻿using UnityEngine;
+﻿
+using UnityEngine;
 
 public class ExitHole : MonoBehaviour
 {
-    public Sprite closedSprite;
-    public Sprite openSprite;
-    private SpriteRenderer spriteRenderer;
+    public Sprite closedSprite, openSprite;
+    private SpriteRenderer rend;
     public bool isOpen = false;
-
-    void Start()
-    {
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        spriteRenderer.sprite = closedSprite;
-    }
-
-    public void Open()
-    {
-        isOpen = true;
-        if (spriteRenderer != null && openSprite != null)
-        {
-            spriteRenderer.sprite = openSprite;
-        }
-    }
-
-    private void OnTriggerEnter2D(Collider2D collision)
+    void Start() { rend = GetComponent<SpriteRenderer>(); rend.sprite = closedSprite; }
+    public void Open() { isOpen = true; if (rend && openSprite) rend.sprite = openSprite; }
+    public void Close() { isOpen = false; if (rend && closedSprite) rend.sprite = closedSprite; }
+    void OnTriggerEnter2D(Collider2D c)
     {
         if (!isOpen) return;
-
-        if (collision.CompareTag("Player") )
+        if (c.CompareTag("Player"))
         {
-            Debug.Log("🏆 WIN! Rắn đã chạm vào hố mở!");
-            
+            var s = c.GetComponent<SnakeController>();
+            if (s != null && s.IsAllFoodEaten()) Debug.Log("🏆 WIN!");
         }
     }
 }
